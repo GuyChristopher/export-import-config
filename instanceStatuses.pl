@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-require 'getExportImportTokens.pl'; 
+require '/opt/folio/exportImportConfig/getExportImportTokens.pl'; 
 
 use JSON; 
 
@@ -9,10 +9,11 @@ print "exporting table data \n";
 $instanceStatuses = `curl -s -X GET -G -H '$jsonHeader' -H '$exportToken' -d 'limit=1000' $exportURL/instance-statuses?query=id="*"`;
 $hash = decode_json $instanceStatuses;
 for ( @{$hash->{instanceStatuses}} ) {
+	$id = $_->{'id'};
 	$name = $_->{'name'};
 	$code = $_->{'code'};
 	$source = $_->{'source'};
-	push(@tableData,"$name|$code|$source");
+	push(@tableData,"$id|$name|$code|$source");
 }
 print "@tableData \n\n";
 
@@ -29,8 +30,8 @@ for ( @{$hash->{instanceStatuses}} ) {
 
 print "\nimporting table data \n\n";
 foreach $row (@tableData) {
-	($name,$code,$source) = split(/\|/,$row);
-	$json = qq[{"name":"$name","code":"$code","source":"$source"}];
+	($id,$name,$code,$source) = split(/\|/,$row);
+	$json = qq[{"id":"$id","name":"$name","code":"$code","source":"$source"}];
 	$post = `curl -s -w '\n' -X POST -H '$jsonHeader' -H '$importToken' -d '$json' $importURL/instance-statuses`;
 	print "$post \n\n";
 }
