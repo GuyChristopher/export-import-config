@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-require 'getExportImportTokens.pl'; 
+require '/opt/folio/exportImportConfig/getExportImportTokens.pl'; 
 
 use JSON; 
 
@@ -8,9 +8,10 @@ print "exporting table data \n";
 $addressTypes = `curl -s -X GET -G -H '$jsonHeader' -H '$exportToken' -d 'limit=1000' $exportURL/addresstypes?query=id="*"`;
 $hash = decode_json $addressTypes;
 for ( @{$hash->{addressTypes}} ) {
+	$id = $_->{'id'};
 	$addressType = $_->{'addressType'};
 	$desc = $_->{'desc'};
-	push(@tableData,"$addressType|$desc");
+	push(@tableData,"$id|$addressType|$desc");
 }
 print "@tableData \n\n";
 
@@ -27,8 +28,8 @@ for ( @{$hash->{addressTypes}} ) {
 
 print "\nimporting table data \n\n";
 foreach $row (@tableData) {
-	($addressType,$desc) = split(/\|/,$row);
-	$json = qq[{"addressType":"$addressType","desc":"$desc"}];
+	($id,$addressType,$desc) = split(/\|/,$row);
+	$json = qq[{"id":"$id","addressType":"$addressType","desc":"$desc"}];
 	$post = `curl -s -w '\n' -X POST -H '$jsonHeader' -H '$importToken' -d '$json' $importURL/addresstypes`;
 	print "$post \n\n";
 }
