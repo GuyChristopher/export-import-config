@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-require 'getExportImportTokens.pl'; 
+require '/opt/folio/exportImportConfig/getExportImportTokens.pl'; 
 
 use JSON; 
 
@@ -9,8 +9,9 @@ print "exporting table data \n";
 $noteTypes = `curl -s -X GET -G -H '$jsonHeader' -H '$exportToken' -d 'limit=1000' $exportURL/note-types?query=id="*"`;
 $hash = decode_json $noteTypes;
 for ( @{$hash->{noteTypes}} ) {
+	$id = $_->{'id'};
 	$name = $_->{'name'};
-	push(@tableData,"$name");
+	push(@tableData,"$id|$name");
 }
 print "@tableData \n\n";
 
@@ -26,8 +27,9 @@ for ( @{$hash->{noteTypes}} ) {
 }
 
 print "\nimporting table data \n\n";
-foreach $name (@tableData) {
-	$json = qq[{"name":"$name"}];
+foreach $row (@tableData) {
+	($id,$name) = split(/\|/,$row);
+	$json = qq[{"id":"$id","name":"$name"}];
 	$post = `curl -s -w '\n' -X POST -H '$jsonHeader' -H '$importToken' -d '$json' $importURL/note-types`;
 	print "$post \n\n";
 }
