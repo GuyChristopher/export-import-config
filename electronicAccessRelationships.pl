@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-require 'getExportImportTokens.pl'; 
+require '/opt/folio/exportImportConfig/getExportImportTokens.pl'; 
 
 use JSON; 
 
@@ -9,9 +9,10 @@ print "exporting table data \n";
 $electronicAccessRelationships = `curl -s -X GET -G -H '$jsonHeader' -H '$exportToken' -d 'limit=1000' $exportURL/electronic-access-relationships?query=id="*"`;
 $hash = decode_json $electronicAccessRelationships;
 for ( @{$hash->{electronicAccessRelationships}} ) {
+	$id = $_->{'id'};
 	$name = $_->{'name'};
 	$source = $_->{'source'};
-	push(@tableData,"$name|$source");
+	push(@tableData,"$id|$name|$source");
 }
 print "@tableData \n\n";
 
@@ -28,8 +29,8 @@ for ( @{$hash->{electronicAccessRelationships}} ) {
 
 print "\nimporting table data \n\n";
 foreach $row (@tableData) {
-	($name,$source) = split(/\|/,$row);
-	$json = qq[{"name":"$name","source":"$source"}];
+	($id,$name,$source) = split(/\|/,$row);
+	$json = qq[{"id":"$id","name":"$name","source":"$source"}];
 	$post = `curl -s -w '\n' -X POST -H '$jsonHeader' -H '$importToken' -d '$json' $importURL/electronic-access-relationships`;
 	print "$post \n\n";
 }
