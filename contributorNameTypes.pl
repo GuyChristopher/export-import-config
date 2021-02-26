@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-require 'getExportImportTokens.pl'; 
+require '/opt/folio/exportImportConfig/getExportImportTokens.pl'; 
 
 use JSON; 
 
@@ -9,9 +9,10 @@ print "exporting table data \n";
 $contributorNameTypes = `curl -s -w '\n' -X GET -G -H '$jsonHeader' -H '$exportToken' -d 'limit=1000' $exportURL/contributor-name-types?query=id="*"`;
 $hash = decode_json $contributorNameTypes;
 for ( @{$hash->{contributorNameTypes}} ) {
+	$id = $_->{'id'};
 	$name = $_->{'name'};
 	$ordering = $_->{'ordering'};
-	push(@tableData,"$name|$ordering");
+	push(@tableData,"$id|$name|$ordering");
 }
 print "@tableData \n\n";
 
@@ -27,8 +28,8 @@ for ( @{$hash->{contributorNameTypes}} ) {
 
 print "\nimporting table data \n\n";
 foreach $row (@tableData) {
-	($name,$number) = split(/\|/,$row);
-	$json = qq[{"name":"$name","ordering":"$number"}];
+	($id,$name,$number) = split(/\|/,$row);
+	$json = qq[{"id":"$id","name":"$name","ordering":"$number"}]; print "$json\n";
 	$post = `curl -s -w '\n' -X POST -H '$jsonHeader' -H '$importToken' -d '$json' $importURL/contributor-name-types`;
 	print "$post \n\n";
 }
